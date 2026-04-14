@@ -2,20 +2,25 @@ import {
   pgTable,
   serial,
   varchar,
-  decimal,
   integer,
-  timestamp,
+  boolean,
 } from "drizzle-orm/pg-core";
 
-export const products = pgTable("products", {
+export const vehicles = pgTable("vehicles", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: varchar("description", { length: 1000 }),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  category: varchar("category", { length: 100 }).notNull(),
-  stock: integer("stock").default(0).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  model: varchar("model", { length: 100 }).notNull(),
+  brand: varchar("brand", { length: 100 }),
 });
 
-export type Product = typeof products.$inferSelect;
-export type NewProduct = typeof products.$inferInsert;
+export const maintenanceTasks = pgTable("maintenance_tasks", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+});
+
+export const maintenancePlan = pgTable("maintenance_plan", {
+  id: serial("id").primaryKey(),
+  vehicleId: integer("vehicle_id").notNull(),
+  taskId: integer("task_id").notNull(),
+  kmInterval: integer("km_interval").notNull(),
+  status: boolean("status").default(false),
+});
