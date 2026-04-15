@@ -14,11 +14,9 @@ export function Card({
     </div>
   );
 }
-
 export function CardHeader({ children }: { children: ReactNode }) {
   return <div className="border-b px-4 py-3 font-semibold">{children}</div>;
 }
-
 export function CardContent({ children }: { children: ReactNode }) {
   return <div className="p-4">{children}</div>;
 }

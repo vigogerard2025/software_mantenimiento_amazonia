@@ -3,24 +3,34 @@ import {
   serial,
   varchar,
   integer,
-  boolean,
+  date,
+  text,
+  unique,
 } from "drizzle-orm/pg-core";
 
+// Tabla de vehículos
 export const vehicles = pgTable("vehicles", {
   id: serial("id").primaryKey(),
-  model: varchar("model", { length: 100 }).notNull(),
-  brand: varchar("brand", { length: 100 }),
+  padron: varchar("padron", { length: 50 }).notNull(),
+  placa: varchar("placa", { length: 20 }).notNull(),
+  marca: varchar("marca", { length: 100 }).notNull(),
+  modelo: varchar("modelo", { length: 100 }).notNull(),
+  conductor: varchar("conductor", { length: 150 }).notNull(),
+});
+// Tabla de mantenimientos
+export const maintenanceRecords = pgTable("maintenance_records", {
+  id: serial("id").primaryKey(),
+  vehiclePlaca: varchar("vehicle_placa", { length: 20 })
+    .notNull()
+    .references(() => vehicles.placa, { onDelete: "cascade" }),
+  fecha: date("fecha").notNull(),
+  ubicacion: varchar("ubicacion", { length: 255 }).notNull(),
+  km: integer("km").notNull(),
+  tipo: varchar("tipo", { length: 50 }).notNull(), // ej: "5K", "10K", "20K", "30K"
+  descripcion: text("descripcion"),
 });
 
-export const maintenanceTasks = pgTable("maintenance_tasks", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-});
-
-export const maintenancePlan = pgTable("maintenance_plan", {
-  id: serial("id").primaryKey(),
-  vehicleId: integer("vehicle_id").notNull(),
-  taskId: integer("task_id").notNull(),
-  kmInterval: integer("km_interval").notNull(),
-  status: boolean("status").default(false),
-});
+export type Vehicle = typeof vehicles.$inferSelect;
+export type NewVehicle = typeof vehicles.$inferInsert;
+export type MaintenanceRecord = typeof maintenanceRecords.$inferSelect;
+export type NewMaintenance = typeof maintenanceRecords.$inferInsert;
