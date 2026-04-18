@@ -7,6 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Gestion de Flota Amazonia Tours",
   description: "App de gestion de vehiculos y mantenimientos",
+  manifest: "/manifest.json", // 👈 AGREGAR ESTO
 };
 
 export default function RootLayout({
