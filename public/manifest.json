@@ -1,0 +1,16 @@
+{
+  "name": "Gestión de Flota Amazonia Tours",
+  "short_name": "Flota",
+  "description": "App de vehículos y mantenimientos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "icons": [
+    {
+      "src": "/amazonia_logo.jpg",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

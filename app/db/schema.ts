@@ -12,7 +12,7 @@ import {
 export const vehicles = pgTable("vehicles", {
   id: serial("id").primaryKey(),
   padron: varchar("padron", { length: 50 }).notNull(),
-  placa: varchar("placa", { length: 20 }).notNull(),
+  placa: varchar("placa", { length: 20 }).notNull().unique(),
   marca: varchar("marca", { length: 100 }).notNull(),
   modelo: varchar("modelo", { length: 100 }).notNull(),
   conductor: varchar("conductor", { length: 150 }).notNull(),
@@ -23,10 +23,11 @@ export const maintenanceRecords = pgTable("maintenance_records", {
   vehiclePlaca: varchar("vehicle_placa", { length: 20 })
     .notNull()
     .references(() => vehicles.placa, { onDelete: "cascade" }),
-  fecha: date("fecha").notNull(),
+  fecha: date("fecha", { mode: "string" }).notNull(),
   ubicacion: varchar("ubicacion", { length: 255 }).notNull(),
   km: integer("km").notNull(),
   tipo: varchar("tipo", { length: 50 }).notNull(), // ej: "5K", "10K", "20K", "30K"
+  mecanico: text("mecanico"),
   descripcion: text("descripcion"),
 });
 

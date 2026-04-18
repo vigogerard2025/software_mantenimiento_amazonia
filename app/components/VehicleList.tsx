@@ -13,7 +13,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Input } from "./ui/input";
 import { toast } from "./ui/toast";
-
+import { deleteVehicle } from "@/app/actions/vehicles";
 export function VehicleList() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -49,7 +49,17 @@ export function VehicleList() {
     setEditingVehicle(vehicle);
     setShowForm(true);
   };
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteVehicle(id); // 🔥 AQUÍ ESTÁ LA CLAVE
 
+      toast("Vehículo eliminado");
+      loadVehicles(); // 🔥 recargar desde DB
+    } catch (error) {
+      console.error(error);
+      toast("Error al eliminar");
+    }
+  };
   return (
     <div>
       <div className="mb-6 flex justify-between items-center">
@@ -98,7 +108,12 @@ export function VehicleList() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {vehicles.map((vehicle) => (
-          <VehicleCard key={vehicle.id} vehicle={vehicle} onEdit={handleEdit} />
+          <VehicleCard
+            key={vehicle.id}
+            vehicle={vehicle}
+            onEdit={handleEdit}
+            onDelete={handleDelete} // 👈 AQUÍ
+          />
         ))}
       </div>
       {vehicles.length === 0 && (

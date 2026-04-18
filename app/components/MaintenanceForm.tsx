@@ -17,6 +17,8 @@ const maintenanceFormSchema = z.object({
   km: z.number().int().min(0, "KM no negativo"),
 
   tipo: z.string().min(1, "Tipo requerido"),
+  mecanico: z.string().min(1, "Mecánico requerido"), // 👈 NUEVO
+
   descripcion: z.string().optional(),
 });
 
@@ -48,6 +50,7 @@ export function MaintenanceForm({
       ubicacion: "",
       km: 0,
       tipo: "5K",
+      mecanico: "",
       descripcion: "",
       ...defaultValues,
     },
@@ -55,10 +58,13 @@ export function MaintenanceForm({
 
   // 🔥 FIX: actualizar form al editar
   useEffect(() => {
-    if (defaultValues) {
-      reset(defaultValues);
+    if (defaultValues && placas.length > 0) {
+      reset({
+        ...defaultValues,
+        vehiclePlaca: defaultValues.vehiclePlaca || "",
+      });
     }
-  }, [defaultValues, reset]);
+  }, [defaultValues, placas, reset]);
 
   useEffect(() => {
     getAllPlacas().then(setPlacas);
@@ -72,6 +78,8 @@ export function MaintenanceForm({
     fd.append("ubicacion", data.ubicacion);
     fd.append("km", String(data.km)); // 🔥 FIX number
     fd.append("tipo", data.tipo);
+    fd.append("mecanico", data.mecanico); // 👈 NUEVO
+
     fd.append("descripcion", data.descripcion || "");
 
     await onSubmit(fd);
@@ -85,6 +93,7 @@ export function MaintenanceForm({
         <label className="block text-sm font-medium">Vehículo (Placa)</label>
         <select
           {...register("vehiclePlaca")}
+          defaultValue={defaultValues?.vehiclePlaca || ""}
           className="w-full border rounded px-3 py-2"
         >
           <option value="">Seleccione una placa</option>
@@ -114,7 +123,10 @@ export function MaintenanceForm({
       </div>
       <div>
         <label className="block text-sm font-medium">KM</label>
-        <Input type="number" {...register("km")} />
+        <Input
+          type="number"
+          {...register("km", { valueAsNumber: true })}
+        />{" "}
         {errors.km && (
           <p className="text-red-500 text-xs">{errors.km.message}</p>
         )}
@@ -128,18 +140,38 @@ export function MaintenanceForm({
           {...register("tipo")}
           className="w-full border rounded px-3 py-2"
         >
-          <option value="5K">5K</option>
-          <option value="10K">10K</option>
-          <option value="20K">20K</option>
-          <option value="30K">30K</option>
+          <option value="Preventivo">Preventivo</option>
+          <option value="Correctivo">Correctivo</option>
         </select>
         {errors.tipo && (
           <p className="text-red-500 text-xs">{errors.tipo.message}</p>
         )}
       </div>
       <div>
-        <label className="block text-sm font-medium">Descripción</label>
-        <Input {...register("descripcion")} />
+        <label className="block text-sm font-medium">
+          Mecánico a cargo del Mantenimiento
+        </label>
+        <Input {...register("mecanico")} />
+        {errors.mecanico && (
+          <p className="text-red-500 text-xs">{errors.mecanico.message}</p>
+        )}
+      </div>
+      <div className="pb-10">
+        <label className="block text-sm font-medium ">Descripción</label>
+        <textarea
+          {...register("descripcion")}
+          className="w-full border rounded px-3 py-2 h-40"
+          onPaste={(e) => {
+            e.preventDefault();
+            const text = e.clipboardData.getData("text");
+
+            const formatted = text
+              .replace(/\t/g, "\n") // tabs → salto de línea
+              .replace(/ {2,}/g, "\n"); // muchos espacios → salto
+
+            document.execCommand("insertText", false, formatted);
+          }}
+        />
       </div>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Guardando..." : submitLabel}

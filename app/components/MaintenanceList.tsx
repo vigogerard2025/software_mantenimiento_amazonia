@@ -6,6 +6,7 @@ import {
   createMaintenance,
   updateMaintenance,
   MaintenanceFilters,
+  deleteMaintenance,
 } from "@/app/actions/maintenances";
 import { MaintenanceCard } from "./MaintenanceCard";
 import { MaintenanceForm } from "./MaintenanceForm";
@@ -50,7 +51,19 @@ export function MaintenanceList() {
     setEditing(m);
     setShowForm(true);
   };
+  const handleDelete = async (id: number) => {
+    const old = [...maintenances];
 
+    setMaintenances((prev) => prev.filter((m) => m.id !== id));
+
+    try {
+      await deleteMaintenance(id); // 👈 CAMBIO AQUÍ
+      toast("Mantenimiento eliminado");
+    } catch (error) {
+      setMaintenances(old);
+      toast("Error al eliminar");
+    }
+  };
   return (
     <div>
       <div className="mb-6 flex justify-between items-center">
@@ -93,10 +106,8 @@ export function MaintenanceList() {
             className="w-28"
           >
             <option value="">Todos</option>
-            <option value="5K">5K</option>
-            <option value="10K">10K</option>
-            <option value="20K">20K</option>
-            <option value="30K">30K</option>
+            <option value="Preventivo">Preventivo</option>
+            <option value="Correctivo">Correctivo</option>
           </Select>
           <Button variant="secondary" onClick={() => setFilters({})}>
             Limpiar
@@ -119,6 +130,7 @@ export function MaintenanceList() {
                       ubicacion: editing.ubicacion,
                       km: editing.km,
                       tipo: editing.tipo,
+                      mecanico: editing.mecanico ?? "", // 👈 FIX
                       descripcion: editing.descripcion || "",
                     }
                   : undefined
@@ -130,9 +142,14 @@ export function MaintenanceList() {
         </Card>
       )}
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {maintenances.map((m) => (
-          <MaintenanceCard key={m.id} maintenance={m} onEdit={handleEdit} />
+          <MaintenanceCard
+            key={m.id}
+            maintenance={m}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         ))}
       </div>
       {maintenances.length === 0 && (

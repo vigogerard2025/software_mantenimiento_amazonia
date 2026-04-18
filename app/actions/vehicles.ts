@@ -120,7 +120,8 @@ export async function updateVehicle(id: number, formData: FormData) {
 
 export async function deleteVehicle(id: number) {
   await db.delete(vehicles).where(eq(vehicles.id, id));
-  revalidatePath("/");
+  revalidatePath("/maintenances");
+  revalidatePath("/vehicles");
 }
 
 export async function getVehicleByPlaca(placa: string) {

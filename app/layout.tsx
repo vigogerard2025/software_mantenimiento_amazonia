@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Productos CRUD - Neon + Next.js",
-  description: "App demo con Server Actions y PostgreSQL serverless",
+  title: "Gestion de Flota Amazonia Tours",
+  description: "App de gestion de vehiculos y mantenimientos",
 };
 
 export default function RootLayout({
