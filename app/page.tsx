@@ -5,7 +5,20 @@ import { VehicleList } from "@/app/components/VehicleList";
 import { MaintenanceList } from "@/app/components/MaintenanceList";
 import { motion } from "framer-motion";
 import { InstallButton } from "@/app/components/InstallButton"; // 👈 IMPORTANTE
+import { useEffect } from "react";
 
+export function SWRegister() {
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then(() => console.log("SW registrado"))
+        .catch((err) => console.log("SW error", err));
+    }
+  }, []);
+
+  return null;
+}
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<"vehicles" | "maintenances">(
     "vehicles",
@@ -69,6 +82,7 @@ export default function HomePage() {
 
       {/* 🔥 BOTÓN INSTALAR APP */}
       <InstallButton />
+      <SWRegister />
     </main>
   );
 }
