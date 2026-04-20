@@ -21,6 +21,7 @@ export function MaintenanceList() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<MaintenanceRecord | null>(null);
   const [filters, setFilters] = useState<MaintenanceFilters>({});
+  const [showFilters, setShowFilters] = useState(false);
 
   const load = async () => {
     const data = await getMaintenances(filters);
@@ -51,22 +52,23 @@ export function MaintenanceList() {
     setEditing(m);
     setShowForm(true);
   };
+
   const handleDelete = async (id: number) => {
     const old = [...maintenances];
-
     setMaintenances((prev) => prev.filter((m) => m.id !== id));
-
     try {
-      await deleteMaintenance(id); // 👈 CAMBIO AQUÍ
+      await deleteMaintenance(id);
       toast("Mantenimiento eliminado");
     } catch (error) {
       setMaintenances(old);
       toast("Error al eliminar");
     }
   };
+
   return (
     <div>
-      <div className="mb-6 flex justify-between items-center">
+      {/* TOOLBAR: botón nuevo + toggle filtros */}
+      <div className="mb-4 flex flex-wrap gap-2 items-center justify-between">
         <Button
           onClick={() => {
             setEditing(null);
@@ -75,46 +77,58 @@ export function MaintenanceList() {
         >
           {showForm ? "Cancelar" : "+ Nuevo Mantenimiento"}
         </Button>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Placa"
-            value={filters.vehiclePlaca || ""}
-            onChange={(e) =>
-              setFilters({ ...filters, vehiclePlaca: e.target.value })
-            }
-            className="w-32"
-          />
-          <Input
-            type="date"
-            placeholder="Desde"
-            value={filters.fromDate || ""}
-            onChange={(e) =>
-              setFilters({ ...filters, fromDate: e.target.value })
-            }
-            className="w-36"
-          />
-          <Input
-            type="date"
-            placeholder="Hasta"
-            value={filters.toDate || ""}
-            onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
-            className="w-36"
-          />
-          <Select
-            value={filters.tipo || ""}
-            onChange={(e) => setFilters({ ...filters, tipo: e.target.value })}
-            className="w-28"
-          >
-            <option value="">Todos</option>
-            <option value="Preventivo">Preventivo</option>
-            <option value="Correctivo">Correctivo</option>
-          </Select>
-          <Button variant="secondary" onClick={() => setFilters({})}>
-            Limpiar
-          </Button>
-        </div>
+
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="text-sm text-gray-500 underline underline-offset-2 sm:hidden"
+        >
+          {showFilters ? "Ocultar filtros" : "🔍 Filtrar"}
+        </button>
       </div>
 
+      {/* FILTROS — siempre visibles en desktop, colapsables en móvil */}
+      <div
+        className={`${
+          showFilters ? "flex" : "hidden"
+        } sm:flex flex-col sm:flex-row flex-wrap gap-2 mb-5`}
+      >
+        <Input
+          placeholder="Placa"
+          value={filters.vehiclePlaca || ""}
+          onChange={(e) =>
+            setFilters({ ...filters, vehiclePlaca: e.target.value })
+          }
+          className="w-full sm:w-32"
+        />
+        <Input
+          type="date"
+          placeholder="Desde"
+          value={filters.fromDate || ""}
+          onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })}
+          className="w-full sm:w-36"
+        />
+        <Input
+          type="date"
+          placeholder="Hasta"
+          value={filters.toDate || ""}
+          onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
+          className="w-full sm:w-36"
+        />
+        <Select
+          value={filters.tipo || ""}
+          onChange={(e) => setFilters({ ...filters, tipo: e.target.value })}
+          className="w-full sm:w-28"
+        >
+          <option value="">Todos</option>
+          <option value="Preventivo">Preventivo</option>
+          <option value="Correctivo">Correctivo</option>
+        </Select>
+        <Button variant="secondary" onClick={() => setFilters({})}>
+          Limpiar
+        </Button>
+      </div>
+
+      {/* FORMULARIO */}
       {showForm && (
         <Card className="mb-6">
           <CardHeader>
@@ -130,7 +144,7 @@ export function MaintenanceList() {
                       ubicacion: editing.ubicacion,
                       km: editing.km,
                       tipo: editing.tipo,
-                      mecanico: editing.mecanico ?? "", // 👈 FIX
+                      mecanico: editing.mecanico ?? "",
                       descripcion: editing.descripcion || "",
                     }
                   : undefined
@@ -142,7 +156,8 @@ export function MaintenanceList() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* GRID DE CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {maintenances.map((m) => (
           <MaintenanceCard
             key={m.id}
@@ -152,8 +167,11 @@ export function MaintenanceList() {
           />
         ))}
       </div>
+
       {maintenances.length === 0 && (
-        <p className="text-center text-gray-500">No hay mantenimientos.</p>
+        <p className="text-center text-gray-500 py-10">
+          No hay mantenimientos.
+        </p>
       )}
     </div>
   );

@@ -23,6 +23,7 @@ const vehicleSchema = z.object({
   marca: z.string().min(1, "Marca requerida").max(100),
   modelo: z.string().min(1, "Modelo requerido").max(100),
   conductor: z.string().min(1, "Conductor requerido").max(150),
+  leasingUrl: z.string().optional(),
 });
 
 export type VehicleFilters = {
@@ -76,6 +77,7 @@ export async function createVehicle(formData: FormData) {
     marca: formData.get("marca"),
     modelo: formData.get("modelo"),
     conductor: formData.get("conductor"),
+    leasingUrl: formData.get("leasingUrl"),
   };
 
   const validated = vehicleSchema.parse(raw);
@@ -86,6 +88,7 @@ export async function createVehicle(formData: FormData) {
     marca: validated.marca,
     modelo: validated.modelo,
     conductor: validated.conductor,
+    leasingUrl: validated.leasingUrl || null,
   };
 
   await db.insert(vehicles).values(newVehicle);
@@ -100,6 +103,7 @@ export async function updateVehicle(id: number, formData: FormData) {
     marca: formData.get("marca"),
     modelo: formData.get("modelo"),
     conductor: formData.get("conductor"),
+    leasingUrl: formData.get("leasingUrl"), // ✅ AGREGA ESTO
   };
 
   const validated = vehicleSchema.parse(raw);
@@ -112,6 +116,7 @@ export async function updateVehicle(id: number, formData: FormData) {
       marca: validated.marca,
       modelo: validated.modelo,
       conductor: validated.conductor,
+      leasingUrl: validated.leasingUrl || null,
     })
     .where(eq(vehicles.id, id));
 

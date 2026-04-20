@@ -15,6 +15,13 @@
       "when": 1776189954398,
       "tag": "0001_white_masked_marvel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776694424016,
+      "tag": "0002_robust_firestar",
+      "breakpoints": true
     }
   ]
 }

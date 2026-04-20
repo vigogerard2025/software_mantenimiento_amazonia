@@ -16,6 +16,7 @@ export const vehicles = pgTable("vehicles", {
   marca: varchar("marca", { length: 100 }).notNull(),
   modelo: varchar("modelo", { length: 100 }).notNull(),
   conductor: varchar("conductor", { length: 150 }).notNull(),
+  leasingUrl: text("leasing_url"),
 });
 // Tabla de mantenimientos
 export const maintenanceRecords = pgTable("maintenance_records", {
