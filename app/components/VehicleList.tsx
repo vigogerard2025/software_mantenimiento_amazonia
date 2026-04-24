@@ -21,6 +21,7 @@ export function VehicleList() {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [filters, setFilters] = useState<VehicleFilters>({ search: "" });
   const formRef = useRef<HTMLDivElement>(null);
+
   const loadVehicles = async () => {
     const data = await getVehicles(filters);
     setVehicles(data);
@@ -49,13 +50,8 @@ export function VehicleList() {
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
     setShowForm(true);
-
-    // 🔥 scroll automático
     setTimeout(() => {
-      formRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
   };
 
@@ -99,19 +95,9 @@ export function VehicleList() {
               {editingVehicle ? "Editar Vehículo" : "Crear Vehículo"}
             </CardHeader>
             <CardContent>
+              {/* 🔥 FIX: se pasa vehicle={editingVehicle} para que el form lea los datos */}
               <VehicleForm
-                defaultValues={
-                  editingVehicle
-                    ? {
-                        padron: editingVehicle.padron,
-                        placa: editingVehicle.placa,
-                        marca: editingVehicle.marca,
-                        modelo: editingVehicle.modelo,
-                        conductor: editingVehicle.conductor,
-                        leasingUrl: editingVehicle.leasingUrl ?? undefined,
-                      }
-                    : undefined
-                }
+                vehicle={editingVehicle ?? undefined}
                 onSubmit={editingVehicle ? handleUpdate : handleCreate}
                 submitLabel={editingVehicle ? "Actualizar" : "Crear"}
               />

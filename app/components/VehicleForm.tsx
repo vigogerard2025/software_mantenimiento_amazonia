@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,14 +19,21 @@ const vehicleFormSchema = z.object({
 type FormValues = z.infer<typeof vehicleFormSchema>;
 
 interface VehicleFormProps {
-  defaultValues?: Partial<FormValues>;
+  vehicle?: {
+    id?: number;
+    padron: string;
+    placa: string;
+    marca: string;
+    modelo: string;
+    conductor: string;
+    leasingUrl?: string | null;
+    kmActual?: number | null;
+  };
   onSubmit: (data: FormData) => Promise<void>;
   submitLabel: string;
-  vehicle?: any;
 }
 
 export function VehicleForm({
-  defaultValues,
   vehicle,
   onSubmit,
   submitLabel,
@@ -33,28 +41,51 @@ export function VehicleForm({
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(vehicleFormSchema),
     defaultValues: {
-      padron: vehicle?.padron ?? "",
-      placa: vehicle?.placa ?? "",
-      marca: vehicle?.marca ?? "",
-      modelo: vehicle?.modelo ?? "",
-      conductor: vehicle?.conductor ?? "",
-      leasingUrl: vehicle?.leasingUrl ?? "",
-      kmActual: vehicle?.kmActual ?? 0, // 🔥 IMPORTANTE
+      padron: "",
+      placa: "",
+      marca: "",
+      modelo: "",
+      conductor: "",
+      leasingUrl: "",
+      kmActual: 0,
     },
   });
 
-  // ✅ TIPADO CORRECTO
+  // 🔥 FIX CLAVE: cada vez que cambia el vehículo a editar, resetea el formulario
+  useEffect(() => {
+    if (vehicle) {
+      reset({
+        padron: vehicle.padron ?? "",
+        placa: vehicle.placa ?? "",
+        marca: vehicle.marca ?? "",
+        modelo: vehicle.modelo ?? "",
+        conductor: vehicle.conductor ?? "",
+        leasingUrl: vehicle.leasingUrl ?? "",
+        kmActual: vehicle.kmActual ?? 0,
+      });
+    } else {
+      reset({
+        padron: "",
+        placa: "",
+        marca: "",
+        modelo: "",
+        conductor: "",
+        leasingUrl: "",
+        kmActual: 0,
+      });
+    }
+  }, [vehicle, reset]);
+
   const actionHandler: SubmitHandler<FormValues> = async (data) => {
     const fd = new FormData();
-
     Object.entries(data).forEach(([k, v]) => {
-      fd.append(k, String(v ?? "")); // 🔥 FIX CLAVE
+      fd.append(k, String(v ?? ""));
     });
-
     await onSubmit(fd);
   };
 
@@ -82,7 +113,6 @@ export function VehicleForm({
               <p className={errorClass}>{errors.padron.message}</p>
             )}
           </div>
-
           <div className={fieldClass}>
             <label className={labelClass}>Placa</label>
             <Input {...register("placa")} />
@@ -108,7 +138,6 @@ export function VehicleForm({
               <p className={errorClass}>{errors.marca.message}</p>
             )}
           </div>
-
           <div className={fieldClass}>
             <label className={labelClass}>Modelo</label>
             <Input {...register("modelo")} />
@@ -126,7 +155,6 @@ export function VehicleForm({
         <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3">
           Operación
         </p>
-
         <div className="flex flex-col gap-4">
           <div className={fieldClass}>
             <label className={labelClass}>Conductor</label>
@@ -135,12 +163,10 @@ export function VehicleForm({
               <p className={errorClass}>{errors.conductor.message}</p>
             )}
           </div>
-
           <div className={fieldClass}>
             <label className={labelClass}>URL de leasing</label>
             <Input {...register("leasingUrl")} />
           </div>
-
           <div className={fieldClass}>
             <label className={labelClass}>Kilometraje actual</label>
             <Input
