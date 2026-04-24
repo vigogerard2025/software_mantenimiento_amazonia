@@ -1,5 +1,5 @@
 "use client";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "./ui/button";
@@ -12,6 +12,7 @@ const vehicleFormSchema = z.object({
   modelo: z.string().min(1, "Modelo requerido"),
   conductor: z.string().min(1, "Conductor requerido"),
   leasingUrl: z.string().optional(),
+  kmActual: z.number().min(0),
 });
 
 type FormValues = z.infer<typeof vehicleFormSchema>;
@@ -20,10 +21,12 @@ interface VehicleFormProps {
   defaultValues?: Partial<FormValues>;
   onSubmit: (data: FormData) => Promise<void>;
   submitLabel: string;
+  vehicle?: any;
 }
 
 export function VehicleForm({
   defaultValues,
+  vehicle,
   onSubmit,
   submitLabel,
 }: VehicleFormProps) {
@@ -33,19 +36,25 @@ export function VehicleForm({
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(vehicleFormSchema),
-    defaultValues: defaultValues || {
-      padron: "",
-      placa: "",
-      marca: "",
-      modelo: "",
-      conductor: "",
-      leasingUrl: "",
+    defaultValues: {
+      padron: vehicle?.padron ?? "",
+      placa: vehicle?.placa ?? "",
+      marca: vehicle?.marca ?? "",
+      modelo: vehicle?.modelo ?? "",
+      conductor: vehicle?.conductor ?? "",
+      leasingUrl: vehicle?.leasingUrl ?? "",
+      kmActual: vehicle?.kmActual ?? 0, // 🔥 IMPORTANTE
     },
   });
 
-  const actionHandler = async (data: FormValues) => {
+  // ✅ TIPADO CORRECTO
+  const actionHandler: SubmitHandler<FormValues> = async (data) => {
     const fd = new FormData();
-    Object.entries(data).forEach(([k, v]) => fd.append(k, v ?? ""));
+
+    Object.entries(data).forEach(([k, v]) => {
+      fd.append(k, String(v ?? "")); // 🔥 FIX CLAVE
+    });
+
     await onSubmit(fd);
   };
 
@@ -60,7 +69,7 @@ export function VehicleForm({
       onSubmit={handleSubmit(actionHandler)}
       className="space-y-0"
     >
-      {/* Sección: Identificación */}
+      {/* Identificación */}
       <div className="mb-4">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3">
           Identificación
@@ -68,14 +77,15 @@ export function VehicleForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className={fieldClass}>
             <label className={labelClass}>Padrón</label>
-            <Input placeholder="Ej: 1234" {...register("padron")} />
+            <Input {...register("padron")} />
             {errors.padron && (
               <p className={errorClass}>{errors.padron.message}</p>
             )}
           </div>
+
           <div className={fieldClass}>
             <label className={labelClass}>Placa</label>
-            <Input placeholder="Ej: ABC-123" {...register("placa")} />
+            <Input {...register("placa")} />
             {errors.placa && (
               <p className={errorClass}>{errors.placa.message}</p>
             )}
@@ -83,10 +93,9 @@ export function VehicleForm({
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="border-t border-gray-100 my-4" />
+      <div className="border-t my-4" />
 
-      {/* Sección: Especificaciones */}
+      {/* Especificaciones */}
       <div className="mb-4">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3">
           Especificaciones
@@ -94,14 +103,15 @@ export function VehicleForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className={fieldClass}>
             <label className={labelClass}>Marca</label>
-            <Input placeholder="Ej: JAC" {...register("marca")} />
+            <Input {...register("marca")} />
             {errors.marca && (
               <p className={errorClass}>{errors.marca.message}</p>
             )}
           </div>
+
           <div className={fieldClass}>
             <label className={labelClass}>Modelo</label>
-            <Input placeholder="Ej: SD401" {...register("modelo")} />
+            <Input {...register("modelo")} />
             {errors.modelo && (
               <p className={errorClass}>{errors.modelo.message}</p>
             )}
@@ -109,49 +119,44 @@ export function VehicleForm({
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="border-t border-gray-100 my-4" />
+      <div className="border-t my-4" />
 
-      {/* Sección: Operación */}
+      {/* Operación */}
       <div className="mb-4">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3">
           Operación
         </p>
+
         <div className="flex flex-col gap-4">
           <div className={fieldClass}>
             <label className={labelClass}>Conductor</label>
-            <Input
-              placeholder="Nombre completo del conductor"
-              {...register("conductor")}
-            />
+            <Input {...register("conductor")} />
             {errors.conductor && (
               <p className={errorClass}>{errors.conductor.message}</p>
             )}
           </div>
+
           <div className={fieldClass}>
-            <label className={labelClass}>
-              URL de leasing{" "}
-              <span className="text-gray-400 normal-case tracking-normal font-normal ml-1">
-                — opcional
-              </span>
-            </label>
-            <Input placeholder="https://..." {...register("leasingUrl")} />
-            <p className="text-xs text-gray-400 mt-0.5">
-              Enlace al contrato o documento de leasing
-            </p>
+            <label className={labelClass}>URL de leasing</label>
+            <Input {...register("leasingUrl")} />
+          </div>
+
+          <div className={fieldClass}>
+            <label className={labelClass}>Kilometraje actual</label>
+            <Input
+              type="number"
+              {...register("kmActual", { valueAsNumber: true })}
+            />
+            {errors.kmActual && (
+              <p className={errorClass}>{errors.kmActual.message}</p>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="pt-2">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full md:w-auto"
-        >
-          {isSubmitting ? "Guardando..." : submitLabel}
-        </Button>
-      </div>
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Guardando..." : submitLabel}
+      </Button>
     </form>
   );
 }

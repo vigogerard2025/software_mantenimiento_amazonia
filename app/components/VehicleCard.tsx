@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Vehicle } from "@/app/db/schema";
 import { Button } from "./ui/button";
 import { Car, User, Hash, FileText, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { PdfModal } from "./PdfModal";
-
+import { getUltimoPreventivo } from "@/app/actions/maintenances";
+import { getEstadoMantenimiento } from "@/app/lib/maintenanceStatus";
 interface VehicleCardProps {
   vehicle: Vehicle;
   onEdit: (vehicle: Vehicle) => void;
@@ -25,7 +26,22 @@ const getVehicleImage = (marca: string, modelo: string) => {
 
 export function VehicleCard({ vehicle, onEdit, onDelete }: VehicleCardProps) {
   const [showPdf, setShowPdf] = useState(false);
+  const [estado, setEstado] = useState("...");
+  useEffect(() => {
+    async function loadEstado() {
+      const ultimo = await getUltimoPreventivo(vehicle.placa);
+      console.log("PLACA VEHICULO:", vehicle.placa);
+      console.log("📏 KM ACTUAL:", vehicle.kmActual);
 
+      const estadoCalc = getEstadoMantenimiento(
+        vehicle.kmActual ?? 0,
+        ultimo?.km,
+      );
+      setEstado(estadoCalc);
+    }
+
+    loadEstado();
+  }, [vehicle]);
   // Extrae nombre de archivo desde la URL
   const pdfFilename = vehicle.leasingUrl
     ? vehicle.leasingUrl.split("/").pop() || "contrato-leasing.pdf"
@@ -86,6 +102,19 @@ export function VehicleCard({ vehicle, onEdit, onDelete }: VehicleCardProps) {
                   <ExternalLink size={13} />
                   Descargar
                 </a>
+              </div>
+              <div>
+                <h2>{vehicle.placa}</h2>
+                <p>KM: {vehicle.kmActual}</p>
+
+                <p>
+                  Estado:{" "}
+                  {estado === "urgente"
+                    ? "🔴 Urgente"
+                    : estado === "proximo"
+                      ? "🟡 Próximo"
+                      : "🟢 OK"}
+                </p>
               </div>
             </div>
           )}

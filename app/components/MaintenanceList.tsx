@@ -89,8 +89,8 @@ export function MaintenanceList() {
       {/* FILTROS — siempre visibles en desktop, colapsables en móvil */}
       <div
         className={`${
-          showFilters ? "flex" : "hidden"
-        } sm:flex flex-col sm:flex-row flex-wrap gap-2 mb-5`}
+          showFilters ? "grid" : "hidden"
+        } sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5`}
       >
         <Input
           placeholder="Placa"
@@ -123,6 +123,41 @@ export function MaintenanceList() {
           <option value="Preventivo">Preventivo</option>
           <option value="Correctivo">Correctivo</option>
         </Select>
+        <Input
+          placeholder="Descripcion..."
+          value={filters.search || ""}
+          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+        />
+        <Input
+          placeholder="Ubicación"
+          value={filters.ubicacion || ""}
+          onChange={(e) =>
+            setFilters({ ...filters, ubicacion: e.target.value })
+          }
+          className="w-full sm:w-32"
+        />
+        <Input
+          type="number"
+          placeholder="Km mín"
+          value={filters.minKm ?? ""}
+          onChange={(e) =>
+            setFilters({
+              ...filters,
+              minKm: e.target.value ? Number(e.target.value) : undefined,
+            })
+          }
+        />
+        <Input
+          type="number"
+          placeholder="Km máx"
+          value={filters.maxKm ?? ""}
+          onChange={(e) =>
+            setFilters({
+              ...filters,
+              maxKm: e.target.value ? Number(e.target.value) : undefined,
+            })
+          }
+        />
         <Button variant="secondary" onClick={() => setFilters({})}>
           Limpiar
         </Button>

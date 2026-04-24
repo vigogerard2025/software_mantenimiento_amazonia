@@ -1,0 +1,1 @@
+ALTER TABLE "maintenance_records" ADD COLUMN "km_actual" integer DEFAULT 0;

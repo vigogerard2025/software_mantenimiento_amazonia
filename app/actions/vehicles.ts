@@ -6,10 +6,10 @@ import { vehicles, type NewVehicle } from "@/app/db/schema";
 import { eq, like, or, and } from "drizzle-orm";
 import { z } from "zod";
 
+// ✅ SCHEMA CORREGIDO
 const vehicleSchema = z.object({
   padron: z.string().min(1, "Padrón requerido").max(50),
 
-  // 🔥 VALIDACIÓN MEJORADA DE PLACA
   placa: z
     .string()
     .min(1, "Placa requerida")
@@ -23,9 +23,14 @@ const vehicleSchema = z.object({
   marca: z.string().min(1, "Marca requerida").max(100),
   modelo: z.string().min(1, "Modelo requerido").max(100),
   conductor: z.string().min(1, "Conductor requerido").max(150),
+
   leasingUrl: z.string().optional(),
+
+  // 🔥 CLAVE: coerción + validación
+  kmActual: z.coerce.number().min(0, "KM inválido"),
 });
 
+// ✅ FILTROS
 export type VehicleFilters = {
   search?: string;
   placa?: string;
@@ -33,6 +38,7 @@ export type VehicleFilters = {
   conductor?: string;
 };
 
+// ✅ GET VEHICLES
 export async function getVehicles(filters: VehicleFilters = {}) {
   const { search, placa, marca, conductor } = filters;
 
@@ -60,7 +66,6 @@ export async function getVehicles(filters: VehicleFilters = {}) {
     );
   }
 
-  // 🔥 QUERY CORRECTA (SIN reasignación)
   const result = await db
     .select()
     .from(vehicles)
@@ -70,6 +75,7 @@ export async function getVehicles(filters: VehicleFilters = {}) {
   return result;
 }
 
+// ✅ CREATE VEHICLE
 export async function createVehicle(formData: FormData) {
   const raw = {
     padron: formData.get("padron"),
@@ -78,6 +84,7 @@ export async function createVehicle(formData: FormData) {
     modelo: formData.get("modelo"),
     conductor: formData.get("conductor"),
     leasingUrl: formData.get("leasingUrl"),
+    kmActual: formData.get("kmActual"), // 🔥 IMPORTANTE
   };
 
   const validated = vehicleSchema.parse(raw);
@@ -89,6 +96,7 @@ export async function createVehicle(formData: FormData) {
     modelo: validated.modelo,
     conductor: validated.conductor,
     leasingUrl: validated.leasingUrl || null,
+    kmActual: validated.kmActual,
   };
 
   await db.insert(vehicles).values(newVehicle);
@@ -96,6 +104,7 @@ export async function createVehicle(formData: FormData) {
   revalidatePath("/");
 }
 
+// ✅ UPDATE VEHICLE (CORREGIDO 🔥)
 export async function updateVehicle(id: number, formData: FormData) {
   const raw = {
     padron: formData.get("padron"),
@@ -103,7 +112,8 @@ export async function updateVehicle(id: number, formData: FormData) {
     marca: formData.get("marca"),
     modelo: formData.get("modelo"),
     conductor: formData.get("conductor"),
-    leasingUrl: formData.get("leasingUrl"), // ✅ AGREGA ESTO
+    leasingUrl: formData.get("leasingUrl"),
+    kmActual: formData.get("kmActual"), // 🔥 AQUÍ ESTABA EL ERROR
   };
 
   const validated = vehicleSchema.parse(raw);
@@ -117,18 +127,21 @@ export async function updateVehicle(id: number, formData: FormData) {
       modelo: validated.modelo,
       conductor: validated.conductor,
       leasingUrl: validated.leasingUrl || null,
+      kmActual: validated.kmActual, // 🔥 YA SE ACTUALIZA
     })
     .where(eq(vehicles.id, id));
 
   revalidatePath("/");
 }
 
+// ✅ DELETE
 export async function deleteVehicle(id: number) {
   await db.delete(vehicles).where(eq(vehicles.id, id));
   revalidatePath("/maintenances");
   revalidatePath("/vehicles");
 }
 
+// ✅ GET BY PLACA
 export async function getVehicleByPlaca(placa: string) {
   const result = await db
     .select()
@@ -138,6 +151,8 @@ export async function getVehicleByPlaca(placa: string) {
 
   return result[0];
 }
+
+// ✅ LISTA DE PLACAS
 export async function getAllPlacas() {
   const result = await db.select({ placa: vehicles.placa }).from(vehicles);
   return result.map((v) => v.placa);

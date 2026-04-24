@@ -4,12 +4,14 @@
 //Cuaderno donde anotas todo lo que le haces a tus buses
 //Robot ayudante que guarda, busca, edita y borra esas anotaciones automáticamente.
 import { revalidatePath } from "next/cache";
-
+import { ilike, or } from "drizzle-orm";
 import { db } from "@/app/db";
+import { vehicles } from "../db/schema";
 //db base de datos -cuadernito
 import { maintenanceRecords, type NewMaintenance } from "../db/schema";
 //maintanceRecords -tabla donde guardas mantenimientos
-import { eq, and, between, gte, lte, like } from "drizzle-orm";
+import { desc, eq, and, between, gte, lte, like } from "drizzle-orm";
+
 //reglas para buscar
 import { z } from "zod";
 //el profe que revisa datos
@@ -48,10 +50,13 @@ export type MaintenanceFilters = {
   tipo?: string;
   //Solo quiero ver este tipo de mantenimiento
   //? Esto es opcional
+  search?: string;
+  ubicacion?: string; // 🔥 NUEVO
 };
 //lista de opciones para buscar
 export async function getMaintenances(filters: MaintenanceFilters = {}) {
   const conditions = [];
+
   //crea una lista de reglas
   if (filters.vehiclePlaca) {
     conditions.push(eq(maintenanceRecords.vehiclePlaca, filters.vehiclePlaca));
@@ -86,7 +91,30 @@ export async function getMaintenances(filters: MaintenanceFilters = {}) {
   if (filters.tipo) {
     conditions.push(eq(maintenanceRecords.tipo, filters.tipo));
   }
+  // 🔥 FILTRO POR DESCRIPCIÓN
+  // 🔥 FILTRO POR DESCRIPCIÓN / BÚSQUEDA AVANZADA
+  if (filters.search) {
+    const palabras = filters.search
+      .trim()
+      .split(/[,\s]+/)
+      .filter((p) => p.length > 0);
 
+    const searchConditions = palabras.map((palabra) =>
+      or(
+        ilike(maintenanceRecords.descripcion, `%${palabra}%`),
+        ilike(maintenanceRecords.mecanico, `%${palabra}%`),
+        ilike(maintenanceRecords.tipo, `%${palabra}%`),
+      ),
+    );
+    // 🔥 FILTRO POR UBICACIÓN
+
+    conditions.push(and(...searchConditions));
+  }
+  if (filters.ubicacion) {
+    conditions.push(
+      ilike(maintenanceRecords.ubicacion, `%${filters.ubicacion}%`),
+    );
+  }
   // 🔥 QUERY LIMPIA (SIN reasignación)
   const result = await db
     .select()
@@ -135,6 +163,12 @@ export async function createMaintenance(formData: FormData) {
   await db.insert(maintenanceRecords).values(newData);
   //Es como escribir en el cuaderno
   revalidatePath("/");
+  await db
+    .update(vehicles)
+    .set({ kmActual: validated.km })
+    .where(eq(vehicles.placa, validated.vehiclePlaca));
+
+  revalidatePath("/");
   //Actualizar página
   // es como decir Oye, vuelve a cargar todo
 }
@@ -168,8 +202,28 @@ export async function updateMaintenance(id: number, formData: FormData) {
     .where(eq(maintenanceRecords.id, id));
   //Busca el que tenga este ID”
   revalidatePath("/");
-}
+  await db
+    .update(vehicles)
+    .set({ kmActual: validated.km })
+    .where(eq(vehicles.placa, validated.vehiclePlaca));
 
+  revalidatePath("/");
+}
+export async function getUltimoPreventivo(placa: string) {
+  const result = await db
+    .select()
+    .from(maintenanceRecords)
+    .where(
+      and(
+        eq(maintenanceRecords.vehiclePlaca, placa),
+        eq(maintenanceRecords.tipo, "Preventivo"),
+      ),
+    )
+    .orderBy(desc(maintenanceRecords.km))
+    .limit(1);
+
+  return result[0];
+}
 export async function deleteMaintenance(id: number) {
   //Borra este mantenimiento
   await db.delete(maintenanceRecords).where(eq(maintenanceRecords.id, id));

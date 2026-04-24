@@ -17,12 +17,14 @@ export const vehicles = pgTable("vehicles", {
   modelo: varchar("modelo", { length: 100 }).notNull(),
   conductor: varchar("conductor", { length: 150 }).notNull(),
   leasingUrl: text("leasing_url"),
+  kmActual: integer("km_actual").default(0),
 });
 // Tabla de mantenimientos
 export const maintenanceRecords = pgTable("maintenance_records", {
   id: serial("id").primaryKey(),
-  vehiclePlaca: varchar("vehicle_placa", { length: 20 })
+  vehiclePlaca: varchar("placa", { length: 20 })
     .notNull()
+    .unique()
     .references(() => vehicles.placa, { onDelete: "cascade" }),
   fecha: date("fecha", { mode: "string" }).notNull(),
   ubicacion: varchar("ubicacion", { length: 255 }).notNull(),
@@ -31,7 +33,6 @@ export const maintenanceRecords = pgTable("maintenance_records", {
   mecanico: text("mecanico"),
   descripcion: text("descripcion"),
 });
-
 export type Vehicle = typeof vehicles.$inferSelect;
 export type NewVehicle = typeof vehicles.$inferInsert;
 export type MaintenanceRecord = typeof maintenanceRecords.$inferSelect;
