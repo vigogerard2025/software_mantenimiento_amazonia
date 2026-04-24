@@ -21,7 +21,7 @@ export function getEstadoMantenimiento(
   kmActual: number,
   ultimoPreventivoKm?: number,
 ): EstadoDetalle {
-  if (!ultimoPreventivoKm) {
+  if (!ultimoPreventivoKm && ultimoPreventivoKm !== 0) {
     return {
       estado: "sin_historial",
       label: "Sin historial",
@@ -33,17 +33,28 @@ export function getEstadoMantenimiento(
     };
   }
 
-  const kmRecorridos = kmActual - ultimoPreventivoKm;
+  // 🔥 Calcula el siguiente múltiplo de 5000
+  const siguienteMantenimiento =
+    Math.ceil(kmActual / INTERVALO_KM) * INTERVALO_KM;
+
+  // 🔥 El mantenimiento anterior (bloque)
+  const mantenimientoAnterior = siguienteMantenimiento - INTERVALO_KM;
+
+  // 🔥 Cuánto has avanzado en este bloque
+  const kmRecorridos = kmActual - mantenimientoAnterior;
+
   const porcentaje = Math.min(
     100,
     Math.round((kmRecorridos / INTERVALO_KM) * 100),
   );
-  const kmRestantes = Math.max(0, INTERVALO_KM - kmRecorridos);
 
-  if (kmRecorridos >= INTERVALO_KM) {
+  const kmRestantes = siguienteMantenimiento - kmActual;
+
+  // 🔴 YA SE PASÓ DEL BLOQUE
+  if (kmActual >= siguienteMantenimiento) {
     return {
       estado: "urgente",
-      label: "Mantenimiento vencido",
+      label: `Mantenimiento vencido (${siguienteMantenimiento.toLocaleString()} km)`,
       emoji: "🔴",
       color: "#dc2626",
       bgColor: "#fef2f2",
@@ -53,8 +64,8 @@ export function getEstadoMantenimiento(
     };
   }
 
-  if (kmRecorridos >= INTERVALO_KM * 0.8) {
-    // 80% del intervalo → Próximo
+  // 🟡 CERCA (80%)
+  if (porcentaje >= 80) {
     return {
       estado: "proximo",
       label: `Próximo en ${kmRestantes.toLocaleString()} km`,
@@ -67,6 +78,7 @@ export function getEstadoMantenimiento(
     };
   }
 
+  // 🟢 TODO OK
   return {
     estado: "ok",
     label: `OK — faltan ${kmRestantes.toLocaleString()} km`,

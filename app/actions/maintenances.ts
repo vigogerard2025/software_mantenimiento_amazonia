@@ -224,6 +224,7 @@ export async function getUltimoPreventivo(placa: string) {
 
   return result[0];
 }
+
 export async function deleteMaintenance(id: number) {
   //Borra este mantenimiento
   await db.delete(maintenanceRecords).where(eq(maintenanceRecords.id, id));
