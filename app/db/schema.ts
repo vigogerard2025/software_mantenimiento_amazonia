@@ -5,7 +5,6 @@ import {
   integer,
   date,
   text,
-  unique,
 } from "drizzle-orm/pg-core";
 
 // Tabla de vehículos
@@ -19,20 +18,22 @@ export const vehicles = pgTable("vehicles", {
   leasingUrl: text("leasing_url"),
   kmActual: integer("km_actual").default(0),
 });
-// Tabla de mantenimientos
+
+// Tabla de mantenimientos — SIN .unique() en vehiclePlaca
+// Un vehículo puede tener MUCHOS mantenimientos
 export const maintenanceRecords = pgTable("maintenance_records", {
   id: serial("id").primaryKey(),
   vehiclePlaca: varchar("placa", { length: 20 })
     .notNull()
-    .unique()
     .references(() => vehicles.placa, { onDelete: "cascade" }),
   fecha: date("fecha", { mode: "string" }).notNull(),
   ubicacion: varchar("ubicacion", { length: 255 }).notNull(),
   km: integer("km").notNull(),
-  tipo: varchar("tipo", { length: 50 }).notNull(), // ej: "5K", "10K", "20K", "30K"
+  tipo: varchar("tipo", { length: 50 }).notNull(),
   mecanico: text("mecanico"),
   descripcion: text("descripcion"),
 });
+
 export type Vehicle = typeof vehicles.$inferSelect;
 export type NewVehicle = typeof vehicles.$inferInsert;
 export type MaintenanceRecord = typeof maintenanceRecords.$inferSelect;
